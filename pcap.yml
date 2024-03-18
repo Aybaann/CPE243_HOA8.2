@@ -1,0 +1,31 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Install Updates
+    apt:
+      upgrade: dist
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install required packages
+    apt:
+      name: tcpdump
+      state: present
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Start and Manual capturing
+    command: tcpdump -i enp0s3 -w capture.pcap
+    async: 120
+    poll: 0
+
+  - name: Make it executable the pcap
+    command: chmod +x /home/ivan/capture.pcap
+
+  - name: Extract executable from PCAP
+    ansible.builtin.fetch:
+      src: /home/ivan/capture.pcap
+      dest: /home/ivan/extracted
